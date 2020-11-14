@@ -21,7 +21,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/load-logins', function() {
+    $users = App\Models\User::withoutGlobalScopes()->whereNotNull('tenant_id')->get();
+    foreach($users as $user) {
+        \App\Models\Login::factory()->create([
+            'user_id' => $user->id,
+            'tenant_id' => $user->tenant_id,
+            'created_at' => now(),
+        ]);
+    }
+    return 'loaded';
+});
+
+Route::get('/', [\App\Http\Controllers\HomeController::class, 'show'])->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', Login::class)
@@ -38,18 +50,24 @@ Route::get('password/reset/{token}', Reset::class)
     ->name('password.reset');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/leave-impersonation', [\App\Http\Controllers\ImpersonationController::class, 'leave'])->name('leave-impersonation');
+
+    Route::get('/team', [\App\Http\Controllers\TeamController::class, 'index'])->name('team.index');
+    Route::view('/team/add-user', 'users.create')->name('users.create');
+
+    Route::get('/documents/{user}/{filename}', [\App\Http\Controllers\DocumentController::class, 'show']);
+
     Route::get('email/verify', Verify::class)
         ->middleware('throttle:6,1')
         ->name('verification.notice');
 
-    Route::get('password/confirm', Confirm::class)
-        ->name('password.confirm');
-});
-
-Route::middleware('auth')->group(function () {
     Route::get('email/verify/{id}/{hash}', EmailVerificationController::class)
         ->middleware('signed')
         ->name('verification.verify');
+
+    Route::get('password/confirm', Confirm::class)
+        ->name('password.confirm');
 
     Route::post('logout', LogoutController::class)
         ->name('logout');

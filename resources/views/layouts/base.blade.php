@@ -17,19 +17,20 @@
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 
         <!-- Styles -->
+        <style>
+            [x-cloak] { display: none; }
+        </style>
         <link rel="stylesheet" href="{{ url(mix('css/app.css')) }}">
         @livewireStyles
-
-        <!-- Scripts -->
-        <script src="{{ url(mix('js/app.js')) }}" defer></script>
 
         <!-- CSRF Token -->
         <meta name="csrf-token" content="{{ csrf_token() }}">
     </head>
 
     <body>
-        @yield('body')
-
-        @livewireScripts
+    @yield('body')
+    @stack('scripts')
+    <script src="{{ mix('js/app.js') }}"></script>
+    @livewireScripts
     </body>
 </html>
